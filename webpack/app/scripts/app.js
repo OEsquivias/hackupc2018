@@ -50,28 +50,28 @@ const App = {
     });
   },
 
-  makeTweet: function(){
-    const lon = document.getElementById('lon').value
-    const lat = document.getElementById('lat').value
-
-      var Twit = require('twit')
-
-      var T = new Twit({
-        consumer_key:         '...',
-        // consumer_secret:      '...',
-        access_token:         '...',
-        // access_token_secret:  '...',
-        timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
-        strictSSL:            true,     // optional - requires SSL certificates to be valid.
-      })
-
-      //
-      //  tweet 'hello world!'
-      //
-      T.post('statuses/update', { status: 'Possible crime in coordinates (' +   }, function(err, data, response) {
-        console.log(data)
-      })
-}
+//   makeTweet: function(){
+//     const lon = document.getElementById('lon').value
+//     const lat = document.getElementById('lat').value
+//
+//       var Twit = require('twit')
+//
+//       var T = new Twit({
+//         consumer_key:         '...',
+//         // consumer_secret:      '...',
+//         access_token:         '...',
+//         // access_token_secret:  '...',
+//         timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
+//         strictSSL:            true,     // optional - requires SSL certificates to be valid.
+//       })
+//
+//       //
+//       //  tweet 'hello world!'
+//       //
+//       T.post('statuses/update', { status: 'Possible crime in coordinates (' +   }, function(err, data, response) {
+//         console.log(data)
+//       })
+// }
 
   // HeroContract.Alert().watch({}, '', function(error, result) {
   //     console.log(result);
