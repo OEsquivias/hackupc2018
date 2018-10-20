@@ -13,6 +13,7 @@ const INeedAHero = contract(INeedAHeroArtifact)
 
 let account;
 var HeroContract;
+var a;
 
 const App = {
   start: function () {
@@ -30,24 +31,37 @@ const App = {
     })
   },
 
-  setGps: function () {
-
-    const lon = parseInt(document.getElementById('lon').value*1e6)
-    const lat = parseInt(document.getElementById('lat').value*1e6)
-
-    HeroContract.setGps(account, lat, lon, {from:account, gas:1000000});
+  needHelp: function () {
+    navigator.geolocation.getCurrentPosition(function(pos){
+        var lat = pos["coords"].latitude*1e7;
+        var lon = pos["coords"].latitude*1e7;
+        var accuracy = pos["coords"].accuracy;
+        HeroContract.needHelp(account, lat, lon, accuracy, {from:account, gas:1000000});
+      },
+      function(err){
+        console.log(err);
+      },
+      {enableHighAccuracy: true}
+    );
   },
 
-  getGps: function () {
+  beHero: function () {
 
-    var gpsLon = document.getElementById('gpsLon')
-    var gpsLat = document.getElementById('gpsLat')
-
-    HeroContract.getGps(account, {from:account}).then(function (gps){
-      console.log(parseInt(gps[0]));
-      gpsLat.innerHTML = parseInt(gps[0])*1./1e6;
-      gpsLon.innerHTML = parseInt(gps[1])*1./1e6;
+    HeroContract.Alert().watch(function(error, result) {
+      var lat = parseInt(result["args"]["_lat"])/1e7;
+      var lon = parseInt(result["args"]["_lon"])/1e7;
+      var id = result["args"]["_id"];
+        console.log(result["args"]);
     });
+
+    // var gpsLon = document.getElementById('gpsLon')
+    // var gpsLat = document.getElementById('gpsLat')
+    //
+    // HeroContract.getGps(account, {from:account}).then(function (gps){
+    //   console.log(parseInt(gps[0]));
+    //   gpsLat.innerHTML = parseInt(gps[0])*1./1e7;
+    //   gpsLon.innerHTML = parseInt(gps[1])*1./1e7;
+    // });
   },
 
   // HeroContract.Alert().watch({}, '', function(error, result) {

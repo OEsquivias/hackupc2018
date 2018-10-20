@@ -6,6 +6,7 @@ contract INeedAHero {
         address account;
         int lat;
         int lon;
+        uint accuracy;
         bool volunteer;
     }
 
@@ -15,11 +16,12 @@ contract INeedAHero {
     mapping (bytes32 => person) public people;
     mapping (bytes32 => mapping (bytes32 => bool)) public matches;
 
-    function setGps(bytes32 _id, int _lat, int _lon) public {
+    function needHelp(bytes32 _id, int _lat, int _lon, uint _accuracy) public {
         people[_id].account = msg.sender;
         people[_id].id = _id;
         people[_id].lat = _lat;
         people[_id].lon = _lon;
+        people[_id].accuracy = _accuracy;
         emit Alert(_id, _lat, _lon);
     }
 
