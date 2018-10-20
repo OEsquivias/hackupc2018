@@ -14,6 +14,10 @@ const INeedAHero = contract(INeedAHeroArtifact)
 let account;
 var HeroContract;
 
+var stop;
+var snooze;
+var accountSnooze;
+
 const App = {
   start: function () {
     const self = this
@@ -26,59 +30,66 @@ const App = {
       account = accs[0];
       INeedAHero.deployed().then(function (instance) {
         HeroContract = instance;
+        HeroContract.Alert().watch(function(error, result) {
+          var lat = parseInt(result["args"]["_lat"])*1./1e7;
+          var lon = parseInt(result["args"]["_lon"])*1./1e7;
+          var id = result["args"]["_id"];
+          App.beHero(lat, lon, id);
+        });
       });
-    })
+    });
+
+
+  },
+
+  beHero: function (lat, lon, id) {
+    var checkboxHero = document.getElementById("beAHero");
+    if (checkboxHero.checked) {
+      navigator.geolocation.getCurrentPosition(function(pos){
+        var dist = App.getRadius(lat, lon, pos["coords"].latitude, pos["coords"].longitude);
+        // if (dist < 1000) { COSAS
+          var a = document.createElement('a');
+          var linkText = document.createTextNode("Help: " + id);
+          a.appendChild(linkText);
+          a.href = "https://www.google.com/maps/dir/"+pos["coords"].latitude+","+pos["coords"].longitude+"/"+lat+","+lon;
+          a.target = "_blank";
+          a.innerHTML += "<br>";
+          document.body.appendChild(a);
+      });
+    }
   },
 
   needHelp: function () {
     var span = document.getElementById('span');
-    navigator.geolocation.getCurrentPosition(function(pos){
-        var lat = pos["coords"].latitude;
-        var lon = pos["coords"].longitude;
-        var accuracy = pos["coords"].accuracy;
-        HeroContract.needHelp(account, 414927410, 21474290, accuracy, {from:account, gas:1000000});
-        // HeroContract.needHelp(account, lat*1e7, lon*1e7, accuracy, {from:account, gas:1000000});
-        span.innerHTML = "Request was sent";
-        const telegram_text = account + "\n" + "https://www.google.com/maps/?q="+lat+","+lon;
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=709412242&text=https://www.google.com/maps/?q="+lat+","+lon, true);
-        xhttp.send();
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=558519076&text=https://www.google.com/maps/?q="+lat+","+lon, true);
-        xhttp.send();
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=245461326&text=https://www.google.com/maps/?q="+lat+","+lon, true);
-        xhttp.send();
-      },
-      function(err){
-        console.log(err);
-      },
-      {enableHighAccuracy: true}
-    );
-  },
-
-  beHero: function () {
-    var linkList = document.getElementById('linkList');
-
-    HeroContract.Alert().watch(function(error, result) {
-      var lat = parseInt(result["args"]["_lat"])*1./1e7;
-      var lon = parseInt(result["args"]["_lon"])*1./1e7;
-      var id = result["args"]["_id"];
-
+    var checkbox = document.getElementById("helpMe");
+    if (checkbox.checked) {
       navigator.geolocation.getCurrentPosition(function(pos){
-        var dist = App.getRadius(lat, lon, pos["coords"].latitude, pos["coords"].longitude);
+          var lat = pos["coords"].latitude+Math.random()*0.02;
+          var lon = pos["coords"].longitude+Math.random()*0.02;
+          var accuracy = pos["coords"].accuracy;
 
-        if (dist > 1000) {
-          var a = document.createElement('a');
-          var linkText = document.createTextNode("Somebody needs you\n");
-          a.appendChild(linkText);
-          a.title = "my title text";
-          a.href = "https://www.google.com/maps/?q="+lat+","+lon;
-          document.body.appendChild(a);
-        }
-        console.log(dist);
-      });
-    });
+          if (snooze) {
+            console.log("hola");
+            HeroContract.needHelp(accountSnooze, lat*1e7, lon*1e7, accuracy, {from:account, gas:1000000});
+          }
+          else {
+            accountSnooze = web3.sha3(account+Math.random());
+            HeroContract.needHelp(accountSnooze, lat*1e7, lon*1e7, accuracy, {from:account, gas:1000000});
+          }
+
+          // HeroContract.needHelp(account, lat*1e7, lon*1e7, accuracy, {from:account, gas:1000000});
+          span.innerHTML = "Request was sent";
+          App.timer(lat, lon);
+        },
+        function(err){
+          console.log(err);
+        },
+        {enableHighAccuracy: true}
+      );
+    }
+    else {
+      stop = true;
+    }
   },
 
   getRadius: function(lat_help, lon_help, lat_hero, lon_hero){
@@ -93,7 +104,56 @@ const App = {
      return c*Earth_Radius;
    },
 
+   timer: function(lat, lon) {
+     stop = false;
+     snooze = false;
+     var minut = 1000*60;
+     var late = new Date().getTime() + minut/6;
+     var countDownDate = new Date(late).getTime();
+     // Update the count down every 1 second
+     var x = setInterval(function() {
+         // Get todays date and time
+         var now = new Date().getTime();
+         // Find the distance between now and the count down date
+         var distance = countDownDate - now;
+         // Time calculations for days, hours, minutes and seconds
+         var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+         var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+         var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+         var seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
+         // Output the result in an element with id="demo"
+         document.getElementById("demo").innerHTML =minutes + "m " + seconds + "s ";
+
+         if (stop) {
+           clearInterval(x);
+         }
+
+         if (snooze) {
+           clearInterval(x);
+         }
+
+         // If the count down is over, write some text
+         if (distance < 0) {
+             clearInterval(x);
+             var xhttp = new XMLHttpRequest();
+             xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=709412242&text=https://www.google.com/maps/?q="+lat+","+lon, true);
+             xhttp.send();
+             var xhttp = new XMLHttpRequest();
+             xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=558519076&text=https://www.google.com/maps/?q="+lat+","+lon, true);
+             xhttp.send();
+             var xhttp = new XMLHttpRequest();
+             xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=245461326&text=https://www.google.com/maps/?q="+lat+","+lon, true);
+             xhttp.send();
+             document.getElementById("demo").innerHTML = "A message was sent to the police";
+         }
+     }, 1000);
+   },
+
+   snoozeTimer: function() {
+     snooze = true;
+     App.needHelp();
+   }
 
 }
 
