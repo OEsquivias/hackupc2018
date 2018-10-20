@@ -12,6 +12,7 @@ import INeedAHeroArtifact from '../../build/contracts/INeedAHero.json'
 const INeedAHero = contract(INeedAHeroArtifact)
 
 let account;
+var HeroContract;
 
 const App = {
   start: function () {
@@ -22,7 +23,10 @@ const App = {
 
     // Get the initial account balance so it can be displayed.
     web3.eth.getAccounts(function (err, accs) {
-      account = accs[0]
+      account = accs[0];
+      INeedAHero.deployed().then(function (instance) {
+        HeroContract = instance;
+      });
     })
   },
 
@@ -31,9 +35,7 @@ const App = {
     const lon = parseInt(document.getElementById('lon').value*1e6)
     const lat = parseInt(document.getElementById('lat').value*1e6)
 
-    INeedAHero.deployed().then(function (instance) {
-      instance.setGps(account, lat, lon, {from:account, gas:1000000});
-    });
+    HeroContract.setGps(account, lat, lon, {from:account, gas:1000000});
   },
 
   getGps: function () {
@@ -41,12 +43,10 @@ const App = {
     var gpsLon = document.getElementById('gpsLon')
     var gpsLat = document.getElementById('gpsLat')
 
-    INeedAHero.deployed().then(function (instance) {
-      instance.getGps(account, {from:account}).then(function (gps){
-        console.log(parseInt(gps[0]));
-        gpsLat.innerHTML = parseInt(gps[0])*1./1e6;
-        gpsLon.innerHTML = parseInt(gps[1])*1./1e6;
-      });
+    HeroContract.getGps(account, {from:account}).then(function (gps){
+      console.log(parseInt(gps[0]));
+      gpsLat.innerHTML = parseInt(gps[0])*1./1e6;
+      gpsLon.innerHTML = parseInt(gps[1])*1./1e6;
     });
   }
 }
@@ -54,14 +54,6 @@ const App = {
 window.App = App
 
 window.addEventListener('load', function () {
-  // Checking if Web3 has been injected by the browser (Mist/MetaMask)
-  if (typeof web3 !== 'undefined') {
-    // Use Mist/MetaMask's provider
-    window.web3 = new Web3(web3.currentProvider)
-  } else {
-    // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-    window.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:7545'))
-  }
-
+  window.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:7545'))
   App.start()
 })
