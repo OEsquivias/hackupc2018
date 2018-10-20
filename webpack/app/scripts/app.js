@@ -28,11 +28,11 @@ const App = {
 
   setGps: function () {
 
-    const lon = parseInt(document.getElementById('lon').value*10^6)
-    const lat = parseInt(document.getElementById('lat').value*10^6)
+    const lon = parseInt(document.getElementById('lon').value*1e6)
+    const lat = parseInt(document.getElementById('lat').value*1e6)
 
     INeedAHero.deployed().then(function (instance) {
-      instance.setGps(account, lat, lon, {from:account});
+      instance.setGps(account, lat, lon, {from:account, gas:1000000});
     });
   },
 
@@ -42,9 +42,10 @@ const App = {
     var gpsLat = document.getElementById('gpsLat')
 
     INeedAHero.deployed().then(function (instance) {
-      instance.getGps(account, {from:account}).then(function (lon, lat){
-        gpsLon.innerHtml = lon*1./10^6;
-        gpsLon.innerHtml = lat*1./10^6;
+      instance.getGps(account, {from:account}).then(function (gps){
+        console.log(parseInt(gps[0]));
+        gpsLat.innerHTML = parseInt(gps[0])*1./1e6;
+        gpsLon.innerHTML = parseInt(gps[1])*1./1e6;
       });
     });
   }
