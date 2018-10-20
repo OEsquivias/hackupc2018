@@ -16,6 +16,7 @@ var HeroContract;
 
 var stop;
 var snooze;
+var accountSnooze;
 
 const App = {
   start: function () {
@@ -29,51 +30,66 @@ const App = {
       account = accs[0];
       INeedAHero.deployed().then(function (instance) {
         HeroContract = instance;
+        HeroContract.Alert().watch(function(error, result) {
+          var lat = parseInt(result["args"]["_lat"])*1./1e7;
+          var lon = parseInt(result["args"]["_lon"])*1./1e7;
+          var id = result["args"]["_id"];
+          App.beHero(lat, lon, id);
+        });
       });
-    })
+    });
+
+
+  },
+
+  beHero: function (lat, lon, id) {
+    var checkboxHero = document.getElementById("beAHero");
+    if (checkboxHero.checked) {
+      navigator.geolocation.getCurrentPosition(function(pos){
+        var dist = App.getRadius(lat, lon, pos["coords"].latitude, pos["coords"].longitude);
+        // if (dist < 1000) { COSAS
+          var a = document.createElement('a');
+          var linkText = document.createTextNode("Help: " + id);
+          a.appendChild(linkText);
+          a.href = "https://www.google.com/maps/dir/"+pos["coords"].latitude+","+pos["coords"].longitude+"/"+lat+","+lon;
+          a.target = "_blank";
+          a.innerHTML += "<br>";
+          document.body.appendChild(a);
+      });
+    }
   },
 
   needHelp: function () {
     var span = document.getElementById('span');
-    navigator.geolocation.getCurrentPosition(function(pos){
-        var lat = pos["coords"].latitude;
-        var lon = pos["coords"].longitude;
-        var accuracy = pos["coords"].accuracy;
-        HeroContract.needHelp(account, 414927410, 21474290, accuracy, {from:account, gas:1000000});
-        // HeroContract.needHelp(account, lat*1e7, lon*1e7, accuracy, {from:account, gas:1000000});
-        span.innerHTML = "Request was sent";
-        App.timer(lat, lon);
-      },
-      function(err){
-        console.log(err);
-      },
-      {enableHighAccuracy: true}
-    );
-  },
-
-  beHero: function () {
-    var checkbox = document.getElementById("beAHero");
-    var linkList = document.getElementById('linkList');
-    HeroContract.Alert().watch(function(error, result) {
-      var lat = parseInt(result["args"]["_lat"])*1./1e7;
-      var lon = parseInt(result["args"]["_lon"])*1./1e7;
-      var id = result["args"]["_id"];
-
+    var checkbox = document.getElementById("helpMe");
+    if (checkbox.checked) {
       navigator.geolocation.getCurrentPosition(function(pos){
-        var dist = App.getRadius(lat, lon, pos["coords"].latitude, pos["coords"].longitude);
+          var lat = pos["coords"].latitude+Math.random()*0.02;
+          var lon = pos["coords"].longitude+Math.random()*0.02;
+          var accuracy = pos["coords"].accuracy;
 
-        // if (dist < 1000 && checkbox.checked) { COSAS 
-        if (checkbox.checked) {
-          var a = document.createElement('a');
-          var linkText = document.createTextNode("Somebody needs you\n");
-          a.appendChild(linkText);
-          a.title = "my title text";
-          a.href = "https://www.google.com/maps/?q="+lat+","+lon;
-          document.body.appendChild(a);
-        }
-      });
-    });
+          if (snooze) {
+            console.log("hola");
+            HeroContract.needHelp(accountSnooze, lat*1e7, lon*1e7, accuracy, {from:account, gas:1000000});
+          }
+          else {
+            accountSnooze = web3.sha3(account+Math.random());
+            HeroContract.needHelp(accountSnooze, lat*1e7, lon*1e7, accuracy, {from:account, gas:1000000});
+          }
 
+          // HeroContract.needHelp(account, lat*1e7, lon*1e7, accuracy, {from:account, gas:1000000});
+          span.innerHTML = "Request was sent";
+          App.timer(lat, lon);
+        },
+        function(err){
+          console.log(err);
+        },
+        {enableHighAccuracy: true}
+      );
+    }
+    else {
+      stop = true;
+    }
   },
 
   getRadius: function(lat_help, lon_help, lat_hero, lon_hero){
@@ -94,16 +110,12 @@ const App = {
      var minut = 1000*60;
      var late = new Date().getTime() + minut/6;
      var countDownDate = new Date(late).getTime();
-
      // Update the count down every 1 second
      var x = setInterval(function() {
-
          // Get todays date and time
          var now = new Date().getTime();
-
          // Find the distance between now and the count down date
          var distance = countDownDate - now;
-
          // Time calculations for days, hours, minutes and seconds
          var days = Math.floor(distance / (1000 * 60 * 60 * 24));
          var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -119,7 +131,6 @@ const App = {
 
          if (snooze) {
            clearInterval(x);
-           App.timer();
          }
 
          // If the count down is over, write some text
@@ -139,12 +150,9 @@ const App = {
      }, 1000);
    },
 
-   stopTimer: function() {
-     stop = true;
-   },
-
    snoozeTimer: function() {
      snooze = true;
+     App.needHelp();
    }
 
 }

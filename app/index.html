@@ -7,19 +7,23 @@
 </head>
 <body>
 
-  <button id="send" onclick="App.needHelp()">I need Help</button>
+  <button id="send">I need Help</button>
+  <label class="switch">
+    <input id="helpMe" type="checkbox" onchange="App.needHelp()">
+    <span class="slider round"></span>
+  </label>
   <br>
   <span id="span"></span>
   <br>
   <a href="#" class="button" onClick="App.snoozeTimer()">Snooze</a>
-  <a href="#" class="button" onClick="App.stopTimer()">Stop</a>
   <p id="demo"></p>
   <br>
-  <button id="send" onclick="App.beHero()">Be a hero</button>
+  <button id="send">Be a hero</button>
   <label class="switch">
-    <input id="beAHero" type="checkbox" onchange="App.beHero()">
+    <input id="beAHero" type="checkbox">
     <span class="slider round"></span>
   </label>
+  <br>
 
 </body>
 </html>
