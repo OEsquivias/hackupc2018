@@ -45,9 +45,11 @@ const App = {
   beHero: function (lat, lon, id) {
     var checkboxHero = document.getElementById("beAHero");
     if (checkboxHero.checked) {
+      var score = document.getElementById('score');
       navigator.geolocation.getCurrentPosition(function(pos){
         var dist = App.getRadius(lat, lon, pos["coords"].latitude, pos["coords"].longitude);
-        // if (dist < 1000) { COSAS
+        // if (dist < 2000) {
+        if (true) {
           var a = document.createElement('a');
           var linkText = document.createTextNode("Help: " + id);
           a.appendChild(linkText);
@@ -55,6 +57,11 @@ const App = {
           a.target = "_blank";
           a.innerHTML += "<br>";
           document.body.appendChild(a);
+          HeroContract.doMatch(id, account, pos["coords"].latitude, pos["coords"].longitude, pos["coords"].accuracy, {from: account, gas:1000000});
+          HeroContract.getRating(account, {from: account, gas:1000000}).then(function(rating) {
+            score.innerHTML = rating;
+          });
+        }
       });
     }
   },
@@ -69,7 +76,6 @@ const App = {
           var accuracy = pos["coords"].accuracy;
 
           if (snooze) {
-            console.log("hola");
             HeroContract.needHelp(accountSnooze, lat*1e7, lon*1e7, accuracy, {from:account, gas:1000000});
           }
           else {
@@ -79,7 +85,7 @@ const App = {
 
           // HeroContract.needHelp(account, lat*1e7, lon*1e7, accuracy, {from:account, gas:1000000});
           span.innerHTML = "Request was sent";
-          App.timer(lat, lon);
+          App.timer(lat, lon, accuracy);
         },
         function(err){
           console.log(err);
@@ -89,6 +95,7 @@ const App = {
     }
     else {
       stop = true;
+      HeroContract.noMoreHelp(accountSnooze, {from: account, gas:1000000});
     }
   },
 
@@ -104,7 +111,7 @@ const App = {
      return c*Earth_Radius;
    },
 
-   timer: function(lat, lon) {
+   timer: function(lat, lon, accuracy) {
      stop = false;
      snooze = false;
      var minut = 1000*60;
@@ -131,35 +138,51 @@ const App = {
 
          if (snooze) {
            clearInterval(x);
+           App.needHelp();
          }
 
          // If the count down is over, write some text
-         if (distance < 0) {
-             clearInterval(x);
-             var xhttp = new XMLHttpRequest();
-             xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=709412242&text=https://www.google.com/maps/?q="+lat+","+lon, true);
-             xhttp.send();
-             var xhttp = new XMLHttpRequest();
-             xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=558519076&text=https://www.google.com/maps/?q="+lat+","+lon, true);
-             xhttp.send();
-             var xhttp = new XMLHttpRequest();
-             xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=245461326&text=https://www.google.com/maps/?q="+lat+","+lon, true);
-             xhttp.send();
-             document.getElementById("demo").innerHTML = "A message was sent to the police";
+         if (distance <= 0) {
+           document.getElementById("demo").innerHTML = "A message was sent to the police";
+           clearInterval(x);
+           var y = setInterval(function() {
+             var checkbox = document.getElementById("helpMe");
+             if (checkbox.checked) {
+                 navigator.geolocation.getCurrentPosition(function(pos){
+                     var lat = pos["coords"].latitude+Math.random()*0.02;
+                     var lon = pos["coords"].longitude+Math.random()*0.02;
+                     var accuracy = pos["coords"].accuracy;
+                     HeroContract.needHelp(accountSnooze, lat*1e7, lon*1e7, accuracy, {from:account, gas:1000000});
+
+                     var xhttp = new XMLHttpRequest();
+                     xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=709412242&text=https://www.google.com/maps/?q="+lat+","+lon, true);
+                     xhttp.send();
+                     var xhttp = new XMLHttpRequest();
+                     xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=558519076&text=https://www.google.com/maps/?q="+lat+","+lon, true);
+                     xhttp.send();
+                     var xhttp = new XMLHttpRequest();
+                     xhttp.open("GET", "https://api.telegram.org/bot648982787:AAFwJrWI09o7QUjPGe9ZJaE_KB6cKNG2LJ0/sendMessage?chat_id=245461326&text=https://www.google.com/maps/?q="+lat+","+lon, true);
+                     xhttp.send();
+                     HeroContract.report(accountSnooze, lat, lon, accuracy, {from: account, gas:1000000});
+                   },
+                   function(err){
+                     console.log(err);
+                   },
+                   {enableHighAccuracy: true}
+                 );
+               }
+               else {
+                 clearInterval(y);
+               }
+             }, 10000);
          }
      }, 1000);
    },
 
    snoozeTimer: function() {
      snooze = true;
-     App.needHelp();
    }
-
 }
-
-
-
-
 
 window.App = App
 

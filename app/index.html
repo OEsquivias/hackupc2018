@@ -2,12 +2,13 @@
 <html>
 <head>
   <title>Herochain</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
   <script src="./app.js"></script>
 </head>
 <body>
 
-  <button id="send">I need Help</button>
+  <h1>I need help</h1>
   <label class="switch">
     <input id="helpMe" type="checkbox" onchange="App.needHelp()">
     <span class="slider round"></span>
@@ -15,14 +16,15 @@
   <br>
   <span id="span"></span>
   <br>
-  <a href="#" class="button" onClick="App.snoozeTimer()">Snooze</a>
+  <button id="send" onClick="App.snoozeTimer()">Snooze</button>
   <p id="demo"></p>
   <br>
-  <button id="send">Be a hero</button>
+  <h1>Be a hero</h1>
   <label class="switch">
     <input id="beAHero" type="checkbox">
     <span class="slider round"></span>
   </label>
+  <p id="score"></p>
   <br>
 
 </body>
